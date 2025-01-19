@@ -17,7 +17,6 @@ A robust chatbot application built using **Spring Boot** and powered by an advan
 
 - **Backend**: Spring Boot, Java
 - **Frontend**: HTML, CSS, JavaScript
-- **Database**: MySQL
 - **Model**: Pre-trained NLP model (GPT-based or other)
 - **APIs**: OpenAI/ChatGPT API or custom model
 - **Tools**: Maven, Postman, GitHub
