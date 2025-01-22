@@ -1,34 +1,43 @@
-
-package com.example.chatbot;
+che k package com.example.chatbot;
 
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpMethod;
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
-import org.springframework.web.client.RestTemplate;
+import org.springframework.web.reactive.function.client.WebClient;
+import org.springframework.web.reactive.function.client.WebClientResponseException;
+import org.springframework.http.MediaType;
+import java.util.Map;
 
 @Service
 public class ChatService {
-    private final String OPENAI_API_URL = "https://api.openai.com/v1/chat/completions";
 
-    @Value("${openai.api.key}")
+    @Value("${gemini.api.url}")
+    private String apiUrl;
+
+    @Value("${gemini.api.key}")
     private String apiKey;
 
-    public String getResponse(String message) {
-        RestTemplate restTemplate = new RestTemplate();
-        HttpHeaders headers = new HttpHeaders();
-        headers.set("Authorization", "Bearer " + apiKey);
-        headers.setContentType(MediaType.APPLICATION_JSON);
+    private final WebClient webClient;
 
-        String requestBody = "{\"model\": \"gpt-3.5-turbo\", \"messages\": [{\"role\": \"user\", \"content\": \"" + message + "\"}]}";
-
-        HttpEntity<String> entity = new HttpEntity<>(requestBody, headers);
-        ResponseEntity<String> response = restTemplate.exchange(OPENAI_API_URL, HttpMethod.POST, entity, String.class);
-
-        return response.getBody();
+    public ChatService(WebClient.Builder webClientBuilder) {
+        this.webClient = webClientBuilder.baseUrl(apiUrl).build();
     }
-}    
 
+    public String getResponse(String message) {
+        
+        try {
+            return webClient.post()
+                .header("Authorization", "Bearer " + apiKey)
+                .contentType(MediaType.APPLICATION_JSON)
+                .bodyValue(Map.of("prompt", message))
+                .retrieve()
+                .bodyToMono(String.class)
+                .block();
+        } catch (WebClientResponseException e) {
+            // Handle HTTP errors
+            return "Error: " + e.getMessage();
+        } catch (Exception e) {
+            // Handle unexpected errors
+            return "Unexpected error: " + e.getMessage();
+        }
+    }
+}
